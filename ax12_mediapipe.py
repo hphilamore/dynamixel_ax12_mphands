@@ -54,15 +54,24 @@ def move(servo_id, position):
 
 	h = P >> 8    # value of high 8 bit byte
 
-	l = P         # value of low 8-bit byte                 
+	l = P & 0xff        # value of low 8-bit byte                 
 	
-	print('check', format(h, '#04x'),format(l, '#04x')) # print full hex string representation 
+	# print('check', format(h, '#04x'),format(l, '#04x')) # print full hex string representation 
 	
-	checksum = hex(~(servo_id +
-                     ax_goal_length + 
-                     ax_write_data +
-                     0x1E + h + l)
-                   & 0xff)
+# 	checksum = hex(~(servo_id +
+#                      ax_goal_length + 
+#                      ax_write_data +
+#                      0x1E + h + l)
+#                    & 0xff)
+	
+	checksum = ~(servo_id + ax_goal_length + ax_write_data + 0x1E + h + l) & 0xff
+	checksum = format(checksum, '#04x') # convert to hex number full representation (with 0x...) 
+#                        
+#     checksum = format(checksum, '#04x')       
+	
+	
+	
+	print(checksum)
 	
 	instruction_packet = (format(ax_start, '02x') + " " +
                           format(ax_start, '02x') + " " +
@@ -100,13 +109,16 @@ def move_check(servo_id, position):
  
 with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, min_tracking_confidence=0.7, max_num_hands=N_hands) as hands:
 
-    GPIO.output(6,GPIO.HIGH)
+    #GPIO.output(6,GPIO.HIGH) # switch on LED 
     GPIO.output(18,GPIO.HIGH)
-    #Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E CD 00 0B"))  # Move Servo with ID = 1 to position 205
-    Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E 00 00 D8"))  # Move Servo with ID = 1 to position 205
+    #Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E 00 00 D8"))  # Move Servo with ID = 1 to 0 degrees
+    angle = 0
+    Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))  
     time.sleep(1)
     print(0)
-    Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E CC 00 0C"))  # Move Servo with ID = 1 to position 205
+    #Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E CC 00 0C"))  # Move Servo with ID = 1 to 60 degrees
+    angle = 60
+    Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))  # Move Servo with ID = 1 to position 205
     time.sleep(1)
     print(60)
     
@@ -154,16 +166,25 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
         
                 if hand_landmarks.landmark[handsModule.HandLandmark(12).value].x > 0.5:
                     GPIO.output(18,GPIO.HIGH)
-                    Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E 00 00 D8"))  # Move Servo with ID = 1 to position 205
-                    GPIO.output(18,GPIO.HIGH)
-                    Dynamixel.write(bytearray.fromhex("FF FF 02 05 03 1E 00 00 D7"))  # Move Servo with ID = 1 to position 205
+                    #Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E 00 00 D8"))  
+                    angle = 0
+                    Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))
+                    #GPIO.output(18,GPIO.HIGH)
+                    #Dynamixel.write(bytearray.fromhex("FF FF 02 05 03 1E 00 00 D7"))  
+                    #angle = 0
+                    Dynamixel.write(bytearray.fromhex(move(0x02, int(angle/300 * 1024))))
+                    
                     print(0)
                     
                 else:
                     GPIO.output(18,GPIO.HIGH)
-                    Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E CC 00 0C"))  # Move Servo with ID = 1 to position 205
-                    GPIO.output(18,GPIO.HIGH)
-                    Dynamixel.write(bytearray.fromhex("FF FF 02 05 03 1E CC 00 0B"))  # Move Servo with ID = 1 to position 205
+                    #Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E CC 00 0C"))
+                    angle = 60
+                    Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))
+                    #GPIO.output(18,GPIO.HIGH)
+                    #Dynamixel.write(bytearray.fromhex("FF FF 02 05 03 1E CC 00 0B"))
+                    #angle = 60
+                    Dynamixel.write(bytearray.fromhex(move(0x02, int(angle/300 * 1024))))
                     print(60)
         
         
