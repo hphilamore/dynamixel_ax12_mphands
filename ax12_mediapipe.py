@@ -19,6 +19,10 @@ GPIO.setup(13,GPIO.IN)      # S4 Push Button Pin
 
 N_hands = 2
 
+# TODO: work out how to change serial0--> AMA0 on RPi
+# TODO: set serial permissions on RPi so that 'sudo su' not required to acess ttyS0 to run programme
+# https://roboticsbackend.com/raspberry-pi-hardware-permissions/
+# TODO: add set-up stuff to README on repo 
 Dynamixel=serial.Serial("/dev/ttyS0",baudrate=1000000,timeout=0.1, bytesize=8)   # UART in ttyS0 @ 1Mbps
 
  
@@ -29,6 +33,70 @@ capture = cv2.VideoCapture(0)
 
 frameWidth = capture.get(cv2.CAP_PROP_FRAME_WIDTH)
 frameHeight = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
+ax_start = 0xFF    # 2 x FF bytes indicate start of incoming packet 
+ax_id = 0x01       # servo ID 
+ax_goal_length = 0x05 # length of instruction packet (N parameters + 2)
+
+# instructions for servo to perform 
+ax_ping = 0x01
+ax_read_data = 0x02
+ax_write_data = 0x03
+ax_reg_write = 0x04
+ax_action = 0x05
+ax_reset = 0x06
+ax_sync_write = 0x83
+
+
+def move(servo_id, position):
+
+	P = position  # position as 10-bit number 
+
+	h = P >> 8    # value of high 8 bit byte
+
+	l = P         # value of low 8-bit byte                 
+	
+	print('check', format(h, '#04x'),format(l, '#04x')) # print full hex string representation 
+	
+	checksum = hex(~(servo_id +
+                     ax_goal_length + 
+                     ax_write_data +
+                     0x1E + h + l)
+                   & 0xff)
+	
+	instruction_packet = (format(ax_start, '02x') + " " +
+                          format(ax_start, '02x') + " " +
+                          format(servo_id, '02x') + " " + 
+                          format(ax_goal_length, '02x') + " " +
+                          format(ax_write_data, '02x') + " " +
+                          format(0x1E, '02x') + " " +
+                          format(l, '02x') + " " +
+                          format(h, '02x') + " " +
+                          checksum[2:] 
+                          ).upper()
+                          #str(ax_write_data) + str(0x1E) + str(l) + str(h) + str(checksum))
+
+	return(instruction_packet)
+
+def move_check(servo_id, position):
+
+	P = position  # position as 10-bit number 
+
+	B = P/256               # seperate into 2 8 bit bytes by dividing by max value of 8 bit byte 
+
+	H = int(B // 1)         # decimal value of high byte, convert to intager
+
+	L = B - H                     
+	L = int(L * 256)        # decimal value of low byte
+
+	H = hex(H)
+
+	L = hex(L)
+	
+	print(H,L)
+
+	return(H, L)
+
  
 with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, min_tracking_confidence=0.7, max_num_hands=N_hands) as hands:
 
@@ -41,6 +109,10 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
     Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E CC 00 0C"))  # Move Servo with ID = 1 to position 205
     time.sleep(1)
     print(60)
+    
+    print(move(ax_id, 0))
+    print(move(ax_id, int(60/300 * 1024)))
+    print(move(ax_id, int(120/300 * 1024)))
 
     while (True):
  
@@ -83,11 +155,15 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
                 if hand_landmarks.landmark[handsModule.HandLandmark(12).value].x > 0.5:
                     GPIO.output(18,GPIO.HIGH)
                     Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E 00 00 D8"))  # Move Servo with ID = 1 to position 205
+                    GPIO.output(18,GPIO.HIGH)
+                    Dynamixel.write(bytearray.fromhex("FF FF 02 05 03 1E 00 00 D7"))  # Move Servo with ID = 1 to position 205
                     print(0)
                     
                 else:
                     GPIO.output(18,GPIO.HIGH)
                     Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E CC 00 0C"))  # Move Servo with ID = 1 to position 205
+                    GPIO.output(18,GPIO.HIGH)
+                    Dynamixel.write(bytearray.fromhex("FF FF 02 05 03 1E CC 00 0B"))  # Move Servo with ID = 1 to position 205
                     print(60)
         
         
