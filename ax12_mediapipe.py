@@ -71,7 +71,7 @@ def move(servo_id, position):
 	
 	
 	
-	print(checksum)
+	print('checksum = ', checksum)
 	
 	instruction_packet = (format(ax_start, '02x') + " " +
                           format(ax_start, '02x') + " " +
@@ -84,6 +84,10 @@ def move(servo_id, position):
                           checksum[2:] 
                           ).upper()
                           #str(ax_write_data) + str(0x1E) + str(l) + str(h) + str(checksum))
+	
+	print(instruction_packet)
+	
+	Dynamixel.write(bytearray.fromhex(instruction_packet))
 
 	return(instruction_packet)
 
@@ -113,18 +117,27 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
     GPIO.output(18,GPIO.HIGH)
     #Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E 00 00 D8"))  # Move Servo with ID = 1 to 0 degrees
     angle = 0
-    Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))  
+    #Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))
+    move(0x01, int(angle/300 * 1024))                
     time.sleep(1)
-    print(0)
+    print(angle)
     #Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E CC 00 0C"))  # Move Servo with ID = 1 to 60 degrees
     angle = 60
-    Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))  # Move Servo with ID = 1 to position 205
+    #Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))  # Move Servo with ID = 1 to position 205
+    move(0x01, int(angle/300 * 1024))
     time.sleep(1)
-    print(60)
+    print(angle)
     
-    print(move(ax_id, 0))
-    print(move(ax_id, int(60/300 * 1024)))
-    print(move(ax_id, int(120/300 * 1024)))
+    # SWEEP
+    for i in range(300):
+        move(0x01, int(i/300 * 1024))
+        time.sleep(0.1)
+        print(i)
+        
+    
+#     print(move(ax_id, 0))
+#     print(move(ax_id, int(60/300 * 1024)))
+#     print(move(ax_id, int(120/300 * 1024)))
 
     while (True):
  
@@ -168,24 +181,28 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
                     GPIO.output(18,GPIO.HIGH)
                     #Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E 00 00 D8"))  
                     angle = 0
-                    Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))
+                    #Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))
+                    move(0x01, int(angle/300 * 1024))  
                     #GPIO.output(18,GPIO.HIGH)
                     #Dynamixel.write(bytearray.fromhex("FF FF 02 05 03 1E 00 00 D7"))  
                     #angle = 0
-                    Dynamixel.write(bytearray.fromhex(move(0x02, int(angle/300 * 1024))))
+                    #Dynamixel.write(bytearray.fromhex(move(0x02, int(angle/300 * 1024))))
+                    move(0x02, int(angle/300 * 1024))  
                     
-                    print(0)
+                    print(angle)
                     
                 else:
                     GPIO.output(18,GPIO.HIGH)
                     #Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E CC 00 0C"))
                     angle = 60
-                    Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))
+                    #Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))
+                    move(0x01, int(angle/300 * 1024))  
                     #GPIO.output(18,GPIO.HIGH)
                     #Dynamixel.write(bytearray.fromhex("FF FF 02 05 03 1E CC 00 0B"))
                     #angle = 60
-                    Dynamixel.write(bytearray.fromhex(move(0x02, int(angle/300 * 1024))))
-                    print(60)
+                    #Dynamixel.write(bytearray.fromhex(move(0x02, int(angle/300 * 1024))))
+                    move(0x02, int(angle/300 * 1024))  
+                    print(angle)
         
         
         cv2.imshow('Test hand', frame)
