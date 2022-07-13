@@ -46,6 +46,14 @@ ax_reg_write = 0x04
 ax_action = 0x05
 ax_reset = 0x06
 ax_sync_write = 0x83
+ax_ccw_angle_limit_l = 0x08
+ax_ccw_al_lt = 0x00
+ax_ccw_al_l = 0xFF
+ax_ccw_al_h = 0x03
+ax_speed_length = 0x05
+ax_goal_speed_l = 0x20
+left = 0
+right = 1
 
 
 def move(servo_id, position):
@@ -56,20 +64,8 @@ def move(servo_id, position):
 
 	l = P & 0xff        # value of low 8-bit byte                 
 	
-	# print('check', format(h, '#04x'),format(l, '#04x')) # print full hex string representation 
-	
-# 	checksum = hex(~(servo_id +
-#                      ax_goal_length + 
-#                      ax_write_data +
-#                      0x1E + h + l)
-#                    & 0xff)
-	
 	checksum = ~(servo_id + ax_goal_length + ax_write_data + 0x1E + h + l) & 0xff
 	checksum = format(checksum, '#04x') # convert to hex number full representation (with 0x...) 
-#                        
-#     checksum = format(checksum, '#04x')       
-	
-	
 	
 	print('checksum = ', checksum)
 	
@@ -90,6 +86,90 @@ def move(servo_id, position):
 	Dynamixel.write(bytearray.fromhex(instruction_packet))
 
 	return(instruction_packet)
+
+
+
+def set_endless(servo_id, status):
+    
+    if status: # turn endless rotation on               
+	
+        checksum = ~(servo_id + ax_goal_length + ax_write_data + ax_ccw_angle_limit_l) & 0xff
+        checksum = format(checksum, '#04x') # convert to hex number full representation (with 0x...) 
+        
+        print('checksum = ', checksum)
+        
+        instruction_packet = (format(ax_start, '02x') + " " +
+                              format(ax_start, '02x') + " " +
+                              format(servo_id, '02x') + " " + 
+                              format(ax_goal_length, '02x') + " " +
+                              format(ax_write_data, '02x') + " " +
+                              format(ax_ccw_angle_limit_l, '02x') + " " +
+                              format(ax_ccw_al_lt, '02x') + " " +
+                              format(ax_ccw_al_lt, '02x') + " " +
+                              checksum[2:] 
+                               ).upper()
+                              
+	
+    else: # turn endless rotation off
+        
+        checksum = ~(servo_id + ax_goal_length + ax_write_data +
+                     ax_ccw_angle_limit_l + ax_ccw_al_l + ax_ccw_al_h) & 0xff
+        checksum = format(checksum, '#04x') # convert to hex number full representation (with 0x...)
+        
+        print('checksum = ', checksum)
+        
+        instruction_packet = (format(ax_start, '02x') + " " +
+                              format(ax_start, '02x') + " " +
+                              format(servo_id, '02x') + " " + 
+                              format(ax_goal_length, '02x') + " " +
+                              format(ax_write_data, '02x') + " " +
+                              format(ax_ccw_angle_limit_l, '02x') + " " +
+                              format(ax_ccw_al_l, '02x') + " " +
+                              format(ax_ccw_al_h, '02x') + " " +
+                              checksum[2:] 
+                              ).upper()
+        
+    print(instruction_packet)
+    
+    Dynamixel.write(bytearray.fromhex(instruction_packet))
+    
+    return(instruction_packet)
+
+
+
+def turn(servo_id, side, speed):
+    if side == left:
+        speed_h = speed >> 8 # convert position as 10-bit number to high 8 bit byte
+        speed_l = speed & 0xff
+        
+    else:
+        speed_h = (speed >> 8) + 4
+        speed_l = speed & 0xff
+        
+    checksum = ~(servo_id + ax_speed_length + ax_write_data +
+                 ax_goal_speed_l + speed_l + speed_h) & 0xff
+    
+    checksum = format(checksum, '#04x') # convert to hex number full representation (with 0x...)
+    
+    print('checksum = ', checksum)
+    
+    instruction_packet = (format(ax_start, '02x') + " " +
+                          format(ax_start, '02x') + " " +
+                          format(servo_id, '02x') + " " + 
+                          format(ax_speed_length, '02x') + " " +
+                          format(ax_write_data, '02x') + " " +
+                          format(ax_goal_speed_l, '02x') + " " +
+                          format(speed_l, '02x') + " " +
+                          format(speed_h, '02x') + " " +
+                          checksum[2:] 
+                          ).upper()
+        
+    print(instruction_packet)
+    
+    Dynamixel.write(bytearray.fromhex(instruction_packet))
+    
+    return(instruction_packet)
+
 
 def move_check(servo_id, position):
 
@@ -112,7 +192,8 @@ def move_check(servo_id, position):
 
  
 with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, min_tracking_confidence=0.7, max_num_hands=N_hands) as hands:
-
+    
+    set_endless(0x01, False)
     #GPIO.output(6,GPIO.HIGH) # switch on LED 
     GPIO.output(18,GPIO.HIGH)
     #Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E 00 00 D8"))  # Move Servo with ID = 1 to 0 degrees
@@ -128,16 +209,15 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
     time.sleep(1)
     print(angle)
     
-    # SWEEP
-    for i in range(300):
-        move(0x01, int(i/300 * 1024))
-        time.sleep(0.1)
-        print(i)
-        
     
-#     print(move(ax_id, 0))
-#     print(move(ax_id, int(60/300 * 1024)))
-#     print(move(ax_id, int(120/300 * 1024)))
+#     # SWEEP
+#     for i in range(300):
+#         move(0x01, int(i/300 * 1024))
+#         time.sleep(0.1)
+#         print(i)
+        
+
+        
 
     while (True):
  
@@ -153,16 +233,13 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
                 print(f'HAND NUMBER: {hand_no+1}')
                 print('-----------------------')
         
+                  # show all 20 hand positions 
 #                 for i in range(20):
 #                     print(f'{handsModule.HandLandmark(i).name}:')
 #                     print(f'{hand_landmarks.landmark[handsModule.HandLandmark(i).value]}')
 
-#                 i in range(20):    
-#                     print(f'{mp_hands.HandLandmark(i).name}:') 
-#                     print(f'x: {hand_landmarks.landmark[handsModule.HandLandmark(i).value].x * image_width}')
-#                     print(f'y: {hand_landmarks.landmark[handsModule.HandLandmark(i).value].y * image_height}')
-#                     print(f'z: {hand_landmarks.landmark[handsModule.HandLandmark(i).value].z * image_width}n')
-                    
+                
+                # show wrist position 
                 print(f'{handsModule.HandLandmark(0).name}:')
                 print(f'{hand_landmarks.landmark[handsModule.HandLandmark(0).value]}')
 #                 print(f'x: {hand_landmarks.landmark[handsModule.HandLandmark(0).value].x * frameWidth}')
@@ -171,38 +248,39 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
                 
                 print()
                 
+                # show middle finger tip position 
                 print(f'{handsModule.HandLandmark(12).name}:')
                 print(f'{hand_landmarks.landmark[handsModule.HandLandmark(12).value]}')
 #                 print(f'x: {hand_landmarks.landmark[handsModule.HandLandmark(12).value].x * frameWidth}')
 #                 print(f'y: {hand_landmarks.landmark[handsModule.HandLandmark(12).value].y * frameHeight}')
 #                 print(f'z: {hand_landmarks.landmark[handsModule.HandLandmark(12).value].z * frameWidth}n')
         
+                # Binary position selection based on hand position    
                 if hand_landmarks.landmark[handsModule.HandLandmark(12).value].x > 0.5:
-                    GPIO.output(18,GPIO.HIGH)
-                    #Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E 00 00 D8"))  
+                    GPIO.output(18,GPIO.HIGH) 
                     angle = 0
-                    #Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))
-                    move(0x01, int(angle/300 * 1024))  
-                    #GPIO.output(18,GPIO.HIGH)
-                    #Dynamixel.write(bytearray.fromhex("FF FF 02 05 03 1E 00 00 D7"))  
-                    #angle = 0
-                    #Dynamixel.write(bytearray.fromhex(move(0x02, int(angle/300 * 1024))))
-                    move(0x02, int(angle/300 * 1024))  
-                    
+#                     move(0x01, int(angle/300 * 1024))  
+#                     move(0x02, int(angle/300 * 1024))  
                     print(angle)
+                    set_endless(0x01, True)
+                    #turn(0x01, left, 1000)
+
                     
                 else:
                     GPIO.output(18,GPIO.HIGH)
-                    #Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E CC 00 0C"))
                     angle = 60
-                    #Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))
-                    move(0x01, int(angle/300 * 1024))  
-                    #GPIO.output(18,GPIO.HIGH)
-                    #Dynamixel.write(bytearray.fromhex("FF FF 02 05 03 1E CC 00 0B"))
-                    #angle = 60
-                    #Dynamixel.write(bytearray.fromhex(move(0x02, int(angle/300 * 1024))))
-                    move(0x02, int(angle/300 * 1024))  
+#                     move(0x01, int(angle/300 * 1024))  
+#                     move(0x02, int(angle/300 * 1024))  
                     print(angle)
+                    set_endless(0x01, True)
+                    #turn(0x01, right, 500)
+                      
+#                 # Continous position selection based on hand tracking
+#                 if hand_landmarks.landmark[handsModule.HandLandmark(12).value] != None: 
+#                     finger_x_pos = hand_landmarks.landmark[handsModule.HandLandmark(12).value].x
+#                     finger_x_pos *= 1024
+#                     move(0x01, int(finger_x_pos)) 
+                
         
         
         cv2.imshow('Test hand', frame)
