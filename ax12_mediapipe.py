@@ -52,13 +52,15 @@ ax_ccw_al_l = 0xFF
 ax_ccw_al_h = 0x03
 ax_speed_length = 0x05
 ax_goal_speed_l = 0x20
-left = 0
-right = 1
+ccw = 0
+cw = 1
 
 
 def move(servo_id, position):
 
-	P = position  # position as 10-bit number 
+	P = position  # position as 10-bit number
+	
+	print(P/1024 * 300)
 
 	h = P >> 8    # value of high 8 bit byte
 
@@ -67,7 +69,7 @@ def move(servo_id, position):
 	checksum = ~(servo_id + ax_goal_length + ax_write_data + 0x1E + h + l) & 0xff
 	checksum = format(checksum, '#04x') # convert to hex number full representation (with 0x...) 
 	
-	print('checksum = ', checksum)
+	#print('checksum = ', checksum)
 	
 	instruction_packet = (format(ax_start, '02x') + " " +
                           format(ax_start, '02x') + " " +
@@ -81,7 +83,7 @@ def move(servo_id, position):
                           ).upper()
                           #str(ax_write_data) + str(0x1E) + str(l) + str(h) + str(checksum))
 	
-	print(instruction_packet)
+	#print(instruction_packet)
 	
 	Dynamixel.write(bytearray.fromhex(instruction_packet))
 
@@ -96,7 +98,7 @@ def set_endless(servo_id, status):
         checksum = ~(servo_id + ax_goal_length + ax_write_data + ax_ccw_angle_limit_l) & 0xff
         checksum = format(checksum, '#04x') # convert to hex number full representation (with 0x...) 
         
-        print('checksum = ', checksum)
+        #print('checksum = ', checksum)
         
         instruction_packet = (format(ax_start, '02x') + " " +
                               format(ax_start, '02x') + " " +
@@ -129,7 +131,7 @@ def set_endless(servo_id, status):
                               checksum[2:] 
                               ).upper()
         
-    print(instruction_packet)
+    #print(instruction_packet)
     
     Dynamixel.write(bytearray.fromhex(instruction_packet))
     
@@ -138,11 +140,13 @@ def set_endless(servo_id, status):
 
 
 def turn(servo_id, side, speed):
-    if side == left:
+    if side == ccw:
+        print('ccw')
         speed_h = speed >> 8 # convert position as 10-bit number to high 8 bit byte
         speed_l = speed & 0xff
         
     else:
+        print('cw')
         speed_h = (speed >> 8) + 4
         speed_l = speed & 0xff
         
@@ -151,7 +155,7 @@ def turn(servo_id, side, speed):
     
     checksum = format(checksum, '#04x') # convert to hex number full representation (with 0x...)
     
-    print('checksum = ', checksum)
+    #print('checksum = ', checksum)
     
     instruction_packet = (format(ax_start, '02x') + " " +
                           format(ax_start, '02x') + " " +
@@ -164,11 +168,55 @@ def turn(servo_id, side, speed):
                           checksum[2:] 
                           ).upper()
         
-    print(instruction_packet)
+    #print(instruction_packet)
     
     Dynamixel.write(bytearray.fromhex(instruction_packet))
     
     return(instruction_packet)
+
+
+def sweep():
+    for i in range(300):
+        move(0x01, int(i/300 * 1024))
+        time.sleep(0.1)
+        print(i)
+        
+def binary_position(x):
+    set_endless(0x01, False)
+    if x > 0.5:
+        GPIO.output(18,GPIO.HIGH) 
+        angle = 0
+        move(0x01, int(angle/300 * 1024))  
+        move(0x02, int(angle/300 * 1024))  
+        print(angle)
+
+        
+    else:
+        GPIO.output(18,GPIO.HIGH)
+        angle = 60
+        move(0x01, int(angle/300 * 1024))  
+        move(0x02, int(angle/300 * 1024))  
+        print(angle)
+
+
+def binary_rotation(x):
+    set_endless(0x01, True)
+    if x > 0.5:
+        GPIO.output(18,GPIO.HIGH) 
+        turn(0x01, ccw, 500)
+
+    else:
+        GPIO.output(18,GPIO.HIGH)
+        turn(0x01, cw, 500)
+        
+        
+def continuous_position(x):
+    #  Continous position selection based on hand tracking
+    if x: 
+        finger_x_pos = x
+        finger_x_pos *= 1024
+        move(0x01, int(finger_x_pos)) 
+    
 
 
 def move_check(servo_id, position):
@@ -192,32 +240,10 @@ def move_check(servo_id, position):
 
  
 with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, min_tracking_confidence=0.7, max_num_hands=N_hands) as hands:
-    
-    set_endless(0x01, False)
-    #GPIO.output(6,GPIO.HIGH) # switch on LED 
-    GPIO.output(18,GPIO.HIGH)
-    #Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E 00 00 D8"))  # Move Servo with ID = 1 to 0 degrees
-    angle = 0
-    #Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))
-    move(0x01, int(angle/300 * 1024))                
-    time.sleep(1)
-    print(angle)
-    #Dynamixel.write(bytearray.fromhex("FF FF 01 05 03 1E CC 00 0C"))  # Move Servo with ID = 1 to 60 degrees
-    angle = 60
-    #Dynamixel.write(bytearray.fromhex(move(0x01, int(angle/300 * 1024))))  # Move Servo with ID = 1 to position 205
-    move(0x01, int(angle/300 * 1024))
-    time.sleep(1)
-    print(angle)
-    
-    
-#     # SWEEP
-#     for i in range(300):
-#         move(0x01, int(i/300 * 1024))
-#         time.sleep(0.1)
-#         print(i)
-        
 
-        
+    
+    # sweep()
+   
 
     while (True):
  
@@ -228,7 +254,6 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
             for handLandmarks in results.multi_hand_landmarks:
                 drawingModule.draw_landmarks(frame, handLandmarks, handsModule.HAND_CONNECTIONS)
  
-        
             for hand_no, hand_landmarks in enumerate(results.multi_hand_landmarks):
                 print(f'HAND NUMBER: {hand_no+1}')
                 print('-----------------------')
@@ -241,40 +266,20 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
                 
                 # show wrist position 
                 print(f'{handsModule.HandLandmark(0).name}:')
-                print(f'{hand_landmarks.landmark[handsModule.HandLandmark(0).value]}')
-#                 print(f'x: {hand_landmarks.landmark[handsModule.HandLandmark(0).value].x * frameWidth}')
-#                 print(f'y: {hand_landmarks.landmark[handsModule.HandLandmark(0).value].y * frameHeight}')
-#                 print(f'z: {hand_landmarks.landmark[handsModule.HandLandmark(0).value].z * frameWidth}n')
-                
+                print(f'{hand_landmarks.landmark[handsModule.HandLandmark(0).value]}')               
                 print()
                 
                 # show middle finger tip position 
                 print(f'{handsModule.HandLandmark(12).name}:')
                 print(f'{hand_landmarks.landmark[handsModule.HandLandmark(12).value]}')
-#                 print(f'x: {hand_landmarks.landmark[handsModule.HandLandmark(12).value].x * frameWidth}')
-#                 print(f'y: {hand_landmarks.landmark[handsModule.HandLandmark(12).value].y * frameHeight}')
-#                 print(f'z: {hand_landmarks.landmark[handsModule.HandLandmark(12).value].z * frameWidth}n')
-        
-                # Binary position selection based on hand position    
-                if hand_landmarks.landmark[handsModule.HandLandmark(12).value].x > 0.5:
-                    GPIO.output(18,GPIO.HIGH) 
-                    angle = 0
-#                     move(0x01, int(angle/300 * 1024))  
-#                     move(0x02, int(angle/300 * 1024))  
-                    print(angle)
-                    set_endless(0x01, True)
-                    #turn(0x01, left, 1000)
-
-                    
-                else:
-                    GPIO.output(18,GPIO.HIGH)
-                    angle = 60
-#                     move(0x01, int(angle/300 * 1024))  
-#                     move(0x02, int(angle/300 * 1024))  
-                    print(angle)
-                    set_endless(0x01, True)
-                    #turn(0x01, right, 500)
-                      
+                
+                x = hand_landmarks.landmark[handsModule.HandLandmark(12).value].x
+                
+                # binary_position(x)
+                
+                # binary_rotation(x)
+                
+                continuous_position(x)                   
 #                 # Continous position selection based on hand tracking
 #                 if hand_landmarks.landmark[handsModule.HandLandmark(12).value] != None: 
 #                     finger_x_pos = hand_landmarks.landmark[handsModule.HandLandmark(12).value].x
