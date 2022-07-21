@@ -1,3 +1,7 @@
+# Connecting rapsberry pi to arduino using i2c
+#https://www.deviceplus.com/arduino/connecting-a-raspberry-pi-to-an-arduino-uno/
+#https://www.deviceplus.com/arduino/using-i2c-and-an-arduino-uno-to-work-with-analogue-voltages-on-a-raspberry-pi/
+
 import cv2
 import mediapipe
 import RPi.GPIO as GPIO
@@ -7,6 +11,10 @@ import time
 import RPi.GPIO as GPIO
 import serial
 import time
+from smbus import SMBus
+
+arduino = 0x8
+i2cbus = SMBus(1)
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -147,12 +155,12 @@ def set_endless(servo_id, status):
 
 def turn(servo_id, side, speed):
     if side == ccw:
-        print('ccw')
+        #print('ccw')
         speed_h = speed >> 8 # convert position as 10-bit number to high 8 bit byte
         speed_l = speed & 0xff
         
     else:
-        print('cw')
+        #print('cw')
         speed_h = (speed >> 8) + 4
         speed_l = speed & 0xff
         
@@ -222,6 +230,17 @@ def follow_hand(x, z):
     set_endless(0x02, True)
     
     if 0.0 < x < 1.0:              # hand detected in frame
+        #val = int(255 * x)
+        z_scale_factor = 10; 
+        val = int(255 * z_scale_factor * abs(z))
+        if val>255:val=255         # cap value sent over i2c at 255  
+        print(val);
+        #GPIO.output(26,GPIO.HIGH)
+        try:
+            i2cbus.write_byte(arduino, val)
+        except:
+            print("connection to arduino failed")
+        
         if z <= -0.5:
             print('stop')
             turn(0x01, ccw, 0)
@@ -243,12 +262,12 @@ def follow_hand(x, z):
             turn(0x02, cw, 500)
             
     
-        
-        
-    else:                          # stop
-        print('no hand')
-        turn(0x01, cw, 0)
-        turn(0x02, ccw, 0) 
+#     else:                          # stop
+#         #GPIO.output(26,GPIO.LOW)
+#         i2cbus.write_byte(arduino, 0)
+#         print('no hand')
+#         turn(0x01, cw, 0)
+#         turn(0x02, ccw, 0) 
 
         
         
@@ -322,6 +341,7 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
         
  
         if results.multi_hand_landmarks != None:
+            print('hand detected - ', end='')
             for handLandmarks in results.multi_hand_landmarks:
                 drawingModule.draw_landmarks(frame, handLandmarks, handsModule.HAND_CONNECTIONS)
  
@@ -367,6 +387,18 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
 #                     finger_x_pos *= 1024
 #                     move(0x01, int(finger_x_pos)) 
                 # binary_scribbler_GPIO(x)
+                
+                
+        else:                          # stop
+            #GPIO.output(26,GPIO.LOW)
+            try:
+                i2cbus.write_byte(arduino, 0)
+            except:
+                print("connection to arduino failed")
+            
+            print('no hand')
+            turn(0x01, cw, 0)
+            turn(0x02, ccw, 0) 
                 
         
         # comment out for set-up without display e.g/ headless raspberry pi
