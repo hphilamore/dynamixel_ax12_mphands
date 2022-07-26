@@ -11,11 +11,17 @@ import time
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(18,GPIO.OUT)     # Control Data Direction Pin
-GPIO.setup(6,GPIO.OUT)      # Blue LED Pin
 
-GPIO.setup(26,GPIO.IN)      # S2 Push Button Pin
-GPIO.setup(19,GPIO.IN)      # S3 Push Button Pin
-GPIO.setup(13,GPIO.IN)      # S4 Push Button Pin
+
+# Pins on savage electronics board for RPi zero
+# GPIO.setup(6,GPIO.OUT)      # Blue LED Pin 
+# GPIO.setup(26,GPIO.IN)      # S2 Push Button Pin
+# GPIO.setup(19,GPIO.IN)      # S3 Push Button Pin
+# GPIO.setup(13,GPIO.IN)      # S4 Push Button Pin
+
+# pins for communicating with scribbler robot
+GPIO.setup(6,GPIO.OUT)      
+GPIO.setup(26,GPIO.OUT)      
 
 N_hands = 2
 
@@ -212,10 +218,26 @@ def binary_rotation(x):
         
 def continuous_position(x):
     #  Continous position selection based on hand tracking
-    if x: 
+    if x >= 0:                         # move function only accepts positive integers 
         finger_x_pos = x
         finger_x_pos *= 1024
         move(0x01, int(finger_x_pos)) 
+
+
+def binary_scribbler_GPIO(x):
+
+    if x > 0.5:
+        GPIO.output(6,GPIO.HIGH) 
+        GPIO.output(26,GPIO.LOW) 
+        angle = 0
+        print(angle)
+
+        
+    else:
+        GPIO.output(26,GPIO.HIGH) 
+        GPIO.output(6,GPIO.LOW)  
+        angle = 60
+        print(angle)
     
 
 
@@ -274,21 +296,24 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
                 print(f'{hand_landmarks.landmark[handsModule.HandLandmark(12).value]}')
                 
                 x = hand_landmarks.landmark[handsModule.HandLandmark(12).value].x
+
+                print(f'x = {x}')
                 
                 # binary_position(x)
                 
                 # binary_rotation(x)
                 
-                continuous_position(x)                   
+                #continuous_position(x)                   
 #                 # Continous position selection based on hand tracking
 #                 if hand_landmarks.landmark[handsModule.HandLandmark(12).value] != None: 
 #                     finger_x_pos = hand_landmarks.landmark[handsModule.HandLandmark(12).value].x
 #                     finger_x_pos *= 1024
 #                     move(0x01, int(finger_x_pos)) 
+                binary_scribbler_GPIO()
                 
         
-        
-        cv2.imshow('Test hand', frame)
+        # comment out for set-up without display e.g/ headless raspberry pi
+        #cv2.imshow('Test hand', frame)
  
         if cv2.waitKey(1) == 27:
             break
