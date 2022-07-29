@@ -8,18 +8,22 @@ import RPi.GPIO as GPIO
 import serial
 import time
 
-import RPi.GPIO as GPIO
-import serial
-import time
-from smbus import SMBus
+import os
+import busio
+import digitalio
+import board
+import adafruit_mcp3xxx.mcp3008 as MCP
+from adafruit_mcp3xxx.analog_in import AnalogIn
 
+from smbus import SMBus
 arduino = 0x8
 i2cbus = SMBus(1)
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(18,GPIO.OUT)     # Control Data Direction Pin
-
+GPIO.setup(6,GPIO.OUT)      
+GPIO.setup(26,GPIO.OUT)
 
 # Pins on savage electronics board for RPi zero
 # GPIO.setup(6,GPIO.OUT)      # Blue LED Pin 
@@ -27,11 +31,9 @@ GPIO.setup(18,GPIO.OUT)     # Control Data Direction Pin
 # GPIO.setup(19,GPIO.IN)      # S3 Push Button Pin
 # GPIO.setup(13,GPIO.IN)      # S4 Push Button Pin
 
-# pins for communicating with scribbler robot
-GPIO.setup(6,GPIO.OUT)      
-GPIO.setup(26,GPIO.OUT)      
+      
 
-N_hands = 2
+N_hands = 2 # maximum number of hands to detect 
 
 # TODO: work out how to change serial0--> AMA0 on RPi
 # TODO: set serial permissions on RPi so that 'sudo su' not required to acess ttyS0 to run programme
@@ -68,6 +70,19 @@ ax_speed_length = 0x05
 ax_goal_speed_l = 0x20
 ccw = 0
 cw = 1
+
+
+# create the spi bus
+spi = busio.SPI(clock=board.SCK, MISO=board.MISO, MOSI=board.MOSI)
+# create the cs (chip select)
+cs = digitalio.DigitalInOut(board.D22)
+# create the mcp object
+mcp = MCP.MCP3008(spi, cs)
+# create an analog input channel on pin 0
+chan0 = AnalogIn(mcp, MCP.P0)
+chan1 = AnalogIn(mcp, MCP.P1)
+chan2 = AnalogIn(mcp, MCP.P2)
+chan3 = AnalogIn(mcp, MCP.P3)
 
 
 def move(servo_id, position):
@@ -333,11 +348,17 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
 
    
 
-    while (True):
+    while True:
+        
+        
+        print('Raw ADC Value: ', chan0.value, ', ADC Voltage: ' , round(chan0.voltage, 3) , 'V')
+        print('Raw ADC Value: ', chan1.value, ', ADC Voltage: ' , round(chan1.voltage, 3) , 'V')
+        print()
+        #time.sleep(0.1)
+        
  
         ret, frame = capture.read()
         results = hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        
         
  
         if results.multi_hand_landmarks != None:
