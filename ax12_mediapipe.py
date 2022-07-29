@@ -181,47 +181,47 @@ def turn(servo_id, side, speed):
     return(instruction_packet)
 
 
-def sweep():
+def sweep(servo_id):
     for i in range(300):
-        move(0x01, int(i/300 * 1024))
+        move(servo_id, int(i/300 * 1024))
         time.sleep(0.1)
         print(i)
         
-def binary_position(x):
-    set_endless(0x01, False)
+def binary_position(servo_id, x):
+    set_endless(servo_id, False)
     if x > 0.5:
         GPIO.output(18,GPIO.HIGH) 
         angle = 0
-        move(0x01, int(angle/300 * 1024))  
-        move(0x02, int(angle/300 * 1024))  
+        move(servo_id, int(angle/300 * 1024))
         print(angle)
 
         
     else:
         GPIO.output(18,GPIO.HIGH)
         angle = 60
-        move(0x01, int(angle/300 * 1024))  
-        move(0x02, int(angle/300 * 1024))  
+        move(servo_id, int(angle/300 * 1024))   
         print(angle)
 
 
-def binary_rotation(x):
-    set_endless(0x01, True)
+def binary_rotation(servo_id, x):
+    set_endless(servo_id, True)
     if x > 0.5:
         GPIO.output(18,GPIO.HIGH) 
-        turn(0x01, ccw, 500)
+        turn(servo_id, ccw, 500)
+
 
     else:
         GPIO.output(18,GPIO.HIGH)
-        turn(0x01, cw, 500)
+        turn(servo_id, cw, 500)
+
         
         
-def continuous_position(x):
+def continuous_position(servo_id, x):
     #  Continous position selection based on hand tracking
     if x >= 0:                         # move function only accepts positive integers 
         finger_x_pos = x
         finger_x_pos *= 1024
-        move(0x01, int(finger_x_pos)) 
+        move(servo_id, int(finger_x_pos)) 
 
 
 def binary_scribbler_GPIO(x):
@@ -264,7 +264,7 @@ def move_check(servo_id, position):
 with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, min_tracking_confidence=0.7, max_num_hands=N_hands) as hands:
 
     
-    # sweep()
+    sweep(0x02)
    
 
     while (True):
@@ -299,9 +299,10 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
 
                 print(f'x = {x}')
                 
-                # binary_position(x)
+                # binary_position(0x01, x)
                 
-                # binary_rotation(x)
+                binary_rotation(0x01, x)
+                binary_rotation(0x02, x)
                 
                 #continuous_position(x)                   
 #                 # Continous position selection based on hand tracking
@@ -309,11 +310,11 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
 #                     finger_x_pos = hand_landmarks.landmark[handsModule.HandLandmark(12).value].x
 #                     finger_x_pos *= 1024
 #                     move(0x01, int(finger_x_pos)) 
-                binary_scribbler_GPIO()
+                # binary_scribbler_GPIO(x)
                 
         
         # comment out for set-up without display e.g/ headless raspberry pi
-        #cv2.imshow('Test hand', frame)
+        cv2.imshow('Test hand', frame)
  
         if cv2.waitKey(1) == 27:
             break
