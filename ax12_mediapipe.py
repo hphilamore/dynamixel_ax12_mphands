@@ -213,6 +213,42 @@ def binary_rotation(servo_id, x):
     else:
         GPIO.output(18,GPIO.HIGH)
         turn(servo_id, cw, 500)
+        
+        
+        
+def follow_hand(x, z):
+    GPIO.output(18,GPIO.HIGH) 
+    set_endless(0x01, True)
+    set_endless(0x02, True)
+    
+    if 0.0 < x < 1.0:              # hand detected in frame
+        if z <= -0.5:
+            print('stop')
+            turn(0x01, ccw, 0)
+            turn(0x02, cw, 0)
+        
+        elif x < 0.4:                # turn left
+            print('hand left')
+            turn(0x01, ccw,  500)
+            turn(0x02, cw, 0)
+             
+        elif x > 0.6:              # turn right
+            print('hand right')
+            turn(0x01, ccw,  0)
+            turn(0x02, cw, 500)
+            
+        else:                      # go forwards
+            print('hand centre')
+            turn(0x01, ccw,  500)
+            turn(0x02, cw, 500)
+            
+    
+        
+        
+    else:                          # stop
+        print('no hand')
+        turn(0x01, cw, 0)
+        turn(0x02, ccw, 0) 
 
         
         
@@ -238,7 +274,15 @@ def binary_scribbler_GPIO(x):
         GPIO.output(6,GPIO.LOW)  
         angle = 60
         print(angle)
+        
+        
+def forwards():
+    GPIO.output(18,GPIO.HIGH) 
+    set_endless(0x01, True)
+    set_endless(0x02, True)
     
+    turn(0x01, ccw,500)
+    turn(0x02, cw, 500)    
 
 
 def move_check(servo_id, position):
@@ -264,13 +308,18 @@ def move_check(servo_id, position):
 with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, min_tracking_confidence=0.7, max_num_hands=N_hands) as hands:
 
     
-    sweep(0x02)
+    #sweep(0x02)
+    
+    #forwards()
+
    
 
     while (True):
  
         ret, frame = capture.read()
         results = hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        
+        
  
         if results.multi_hand_landmarks != None:
             for handLandmarks in results.multi_hand_landmarks:
@@ -296,13 +345,20 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
                 print(f'{hand_landmarks.landmark[handsModule.HandLandmark(12).value]}')
                 
                 x = hand_landmarks.landmark[handsModule.HandLandmark(12).value].x
+                z = hand_landmarks.landmark[handsModule.HandLandmark(12).value].z
 
                 print(f'x = {x}')
+                print(f'z = {z}')
                 
                 # binary_position(0x01, x)
                 
-                binary_rotation(0x01, x)
-                binary_rotation(0x02, x)
+#                 binary_rotation(0x01, x)
+#                 binary_rotation(0x02, x)
+
+                follow_hand(x,z)
+                
+                
+                
                 
                 #continuous_position(x)                   
 #                 # Continous position selection based on hand tracking
