@@ -341,12 +341,12 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
         
  
         if results.multi_hand_landmarks != None:
-            print('hand detected - ', end='')
+            #print('hand detected - ', end='')
             for handLandmarks in results.multi_hand_landmarks:
                 drawingModule.draw_landmarks(frame, handLandmarks, handsModule.HAND_CONNECTIONS)
  
             for hand_no, hand_landmarks in enumerate(results.multi_hand_landmarks):
-                print(f'HAND NUMBER: {hand_no+1}')
+                #print(f'HAND NUMBER: {hand_no+1}')
                 print('-----------------------')
         
                   # show all 20 hand positions 
@@ -354,18 +354,27 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
 #                     print(f'{handsModule.HandLandmark(i).name}:')
 #                     print(f'{hand_landmarks.landmark[handsModule.HandLandmark(i).value]}')
 
+                x_ = []
+                z_ = []
+
+                for i in range(20):
+                    x_.append(hand_landmarks.landmark[handsModule.HandLandmark(i).value].x)
+                    z_.append(hand_landmarks.landmark[handsModule.HandLandmark(i).value].z)
+                    
+                x = sum(x_)/len(x_)                
+                z = sum(z_)/len(z_)
+
                 
-                # show wrist position 
-                print(f'{handsModule.HandLandmark(0).name}:')
-                print(f'{hand_landmarks.landmark[handsModule.HandLandmark(0).value]}')               
+                # wrist position, node 0 
+                #print(f'{handsModule.HandLandmark(0).name}:')
+                #print(f"{hand_landmarks.landmark[handsModule.HandLandmark(0).value]}")               
                 print()
                 
-                # show middle finger tip position 
-                print(f'{handsModule.HandLandmark(12).name}:')
-                print(f'{hand_landmarks.landmark[handsModule.HandLandmark(12).value]}')
-                
-                x = hand_landmarks.landmark[handsModule.HandLandmark(12).value].x
-                z = hand_landmarks.landmark[handsModule.HandLandmark(12).value].z
+                # middle finger tip position, node 12
+                #print(f'{handsModule.HandLandmark(12).name}:')
+                #print(f"{hand_landmarks.landmark[handsModule.HandLandmark(12).value]}")
+                #x = hand_landmarks.landmark[handsModule.HandLandmark(12).value].x
+                #z = hand_landmarks.landmark[handsModule.HandLandmark(12).value].z
 
                 print(f'x = {x}')
                 print(f'z = {z}')
