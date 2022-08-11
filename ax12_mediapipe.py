@@ -256,18 +256,24 @@ def follow_hand(x, z):
         except:
             print("connection to arduino failed")
         
-        if z <= -0.5:
+        if z <= -0.15:
             print('stop')
             turn(0x01, ccw, 0)
             turn(0x02, cw, 0)
         
         elif x < 0.4:                # turn left
             print('hand left')
+#             move(0x03, 300)
+#             time.sleep(1)
+#             move(0x03, 0)
             turn(0x01, ccw,  500)
             turn(0x02, cw, 0)
              
         elif x > 0.6:              # turn right
             print('hand right')
+#             move(0x04, 300)
+#             time.sleep(1)
+#             move(0x04, 0)
             turn(0x01, ccw,  0)
             turn(0x02, cw, 500)
             
@@ -345,6 +351,8 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
     #sweep(0x02)
     
     #forwards()
+    set_endless(0x03, False)
+    set_endless(0x04, False)
 
    
 
