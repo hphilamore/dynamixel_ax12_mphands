@@ -44,3 +44,10 @@ This warning may show but it won’t stop things working ‘matplotlib 3.5.2 has
 Communication with Arduino over i2c
 Raspi-config
 - Enable I2C
+
+
+Communication with ADC over SPI
+https://learn.adafruit.com/reading-a-analog-in-and-controlling-audio-volume-with-the-raspberry-pi?view=all
+sudo pip3 install adafruit-blinka
+sudo pip3 install adafruit-circuitpython-mcp3xxx
+Raspi-config —> Enable SPI
