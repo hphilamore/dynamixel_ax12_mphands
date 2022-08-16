@@ -269,7 +269,7 @@ def follow_hand(x, z):
 #             move(0x03, 300)
 #             time.sleep(1)
 #             move(0x03, 0)
-            turn(left, ccw,  500)
+            turn(left, ccw,  1000)
             turn(right, cw, 0)
              
         elif x > 0.6:              # turn right
@@ -278,12 +278,12 @@ def follow_hand(x, z):
 #             time.sleep(1)
 #             move(0x04, 0)
             turn(left, ccw,  0)
-            turn(right, cw, 500)
+            turn(right, cw, 1000)
             
         else:                      # go forwards
             print('hand centre')
-            turn(left, ccw,  500)
-            turn(right, cw, 500)
+            turn(left, ccw,  1000)
+            turn(right, cw, 1000)
             
     
 #     else:                          # stop
@@ -324,8 +324,8 @@ def forwards():
     set_endless(left, True)
     set_endless(right, True)
     
-    turn(left, ccw,500)
-    turn(right, cw, 500)    
+    turn(left, ccw,1000)
+    turn(right, cw, 1000)    
 
 
 def move_check(servo_id, position):
@@ -438,8 +438,8 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
                 print("connection to arduino failed")
             
             print('no hand')
-            turn(0x01, cw, 0)
-            turn(0x02, ccw, 0) 
+            turn(left, cw, 0)
+            turn(right, ccw, 0) 
                 
         
         # comment out for set-up without display e.g/ headless raspberry pi
