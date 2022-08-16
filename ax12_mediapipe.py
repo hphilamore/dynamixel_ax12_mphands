@@ -25,6 +25,9 @@ GPIO.setup(18,GPIO.OUT)     # Control Data Direction Pin
 GPIO.setup(6,GPIO.OUT)      
 GPIO.setup(26,GPIO.OUT)
 
+right = 0x01
+left = 0x02
+
 # Pins on savage electronics board for RPi zero
 # GPIO.setup(6,GPIO.OUT)      # Blue LED Pin 
 # GPIO.setup(26,GPIO.IN)      # S2 Push Button Pin
@@ -33,7 +36,7 @@ GPIO.setup(26,GPIO.OUT)
 
       
 
-N_hands = 2 # maximum number of hands to detect 
+N_hands = 1 # maximum number of hands to detect 
 
 # TODO: work out how to change serial0--> AMA0 on RPi
 # TODO: set serial permissions on RPi so that 'sudo su' not required to acess ttyS0 to run programme
@@ -258,29 +261,29 @@ def follow_hand(x, z):
         
         if z <= -0.15:
             print('stop')
-            turn(0x01, ccw, 0)
-            turn(0x02, cw, 0)
+            turn(left, ccw, 0)
+            turn(right, cw, 0)
         
         elif x < 0.4:                # turn left
             print('hand left')
 #             move(0x03, 300)
 #             time.sleep(1)
 #             move(0x03, 0)
-            turn(0x01, ccw,  500)
-            turn(0x02, cw, 0)
+            turn(left, ccw,  500)
+            turn(right, cw, 0)
              
         elif x > 0.6:              # turn right
             print('hand right')
 #             move(0x04, 300)
 #             time.sleep(1)
 #             move(0x04, 0)
-            turn(0x01, ccw,  0)
-            turn(0x02, cw, 500)
+            turn(left, ccw,  0)
+            turn(right, cw, 500)
             
         else:                      # go forwards
             print('hand centre')
-            turn(0x01, ccw,  500)
-            turn(0x02, cw, 500)
+            turn(left, ccw,  500)
+            turn(right, cw, 500)
             
     
 #     else:                          # stop
@@ -318,11 +321,11 @@ def binary_scribbler_GPIO(x):
         
 def forwards():
     GPIO.output(18,GPIO.HIGH) 
-    set_endless(0x01, True)
-    set_endless(0x02, True)
+    set_endless(left, True)
+    set_endless(right, True)
     
-    turn(0x01, ccw,500)
-    turn(0x02, cw, 500)    
+    turn(left, ccw,500)
+    turn(right, cw, 500)    
 
 
 def move_check(servo_id, position):
