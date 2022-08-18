@@ -254,10 +254,10 @@ def follow_hand(x, z):
         if val>255:val=255         # cap value sent over i2c at 255  
         print(val);
         #GPIO.output(26,GPIO.HIGH)
-        try:
-            i2cbus.write_byte(arduino, val)
-        except:
-            print("connection to arduino failed")
+#         try:
+#             i2cbus.write_byte(arduino, val)
+#         except:
+#             print("connection to arduino failed")
         
         if z <= -0.15:
             print('stop')
@@ -269,8 +269,8 @@ def follow_hand(x, z):
 #             move(0x03, 300)
 #             time.sleep(1)
 #             move(0x03, 0)
-            turn(left, ccw,  1000)
-            turn(right, cw, 0)
+            turn(left, ccw, 500)
+            turn(right, cw,  0)
              
         elif x > 0.6:              # turn right
             print('hand right')
@@ -278,12 +278,12 @@ def follow_hand(x, z):
 #             time.sleep(1)
 #             move(0x04, 0)
             turn(left, ccw,  0)
-            turn(right, cw, 1000)
+            turn(right, cw, 500)
             
         else:                      # go forwards
             print('hand centre')
-            turn(left, ccw,  1000)
-            turn(right, cw, 1000)
+            turn(right, cw,  500)
+            turn(left, ccw, 500)
             
     
 #     else:                          # stop
@@ -362,9 +362,9 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
     while True:
         
         
-        print('Raw ADC Value: ', chan0.value, ', ADC Voltage: ' , round(chan0.voltage, 3) , 'V')
-        print('Raw ADC Value: ', chan1.value, ', ADC Voltage: ' , round(chan1.voltage, 3) , 'V')
-        print()
+#         print('Raw ADC Value: ', chan0.value, ', ADC Voltage: ' , round(chan0.voltage, 3) , 'V')
+#         print('Raw ADC Value: ', chan1.value, ', ADC Voltage: ' , round(chan1.voltage, 3) , 'V')
+#         print()
         #time.sleep(0.1)
         
  
@@ -432,10 +432,10 @@ with handsModule.Hands(static_image_mode=False, min_detection_confidence=0.7, mi
                 
         else:                          # stop
             #GPIO.output(26,GPIO.LOW)
-            try:
-                i2cbus.write_byte(arduino, 0)
-            except:
-                print("connection to arduino failed")
+#             try:
+#                 i2cbus.write_byte(arduino, 0)
+#             except:
+#                 print("connection to arduino failed")
             
             print('no hand')
             turn(left, cw, 0)
