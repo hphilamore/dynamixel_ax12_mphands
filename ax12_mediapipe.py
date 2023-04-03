@@ -274,9 +274,9 @@ def follow_hand(x, z):
              
         elif x > 0.6:              # turn right
             print('hand right')
-             move(0x04, 300)
-             time.sleep(0.4)
-             move(0x04, 0)
+            move(0x04, 300)
+            time.sleep(0.4)
+            move(0x04, 0)
             #turn(left, ccw,  0)
             #turn(right, cw, 500)
             
@@ -290,11 +290,11 @@ def follow_hand(x, z):
 #         #GPIO.output(26,GPIO.LOW)
 #         i2cbus.write_byte(arduino, 0)
 #         print('no hand')
-	  move(0x04, 0)				# idle movements
-	  move 0x03, 150)
-	  time.sleep(0.1)
-	  move(0x04, 150)
-	  move(0x03, 0)
+	  # move(0x04, 0)				# idle movements
+	  # move 0x03, 150)
+	  # time.sleep(0.1)
+	  # move(0x04, 150)
+	  # move(0x03, 0)
 #         turn(0x01, cw, 0)
 #         turn(0x02, ccw, 0) 
 
