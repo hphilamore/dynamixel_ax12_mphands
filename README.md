@@ -18,6 +18,9 @@ Sudo saspi-config
 (Venv)
 
 Install opencv - instructions:
+https://qengineering.eu/install-opencv-4.4-on-raspberry-64-os.html
+(or https://qengineering.eu/install-opencv-4.4-on-raspberry-pi-4.html)
+
 https://raspberrypi-guide.github.io/programming/install-opencv
 Or
 https://stackoverflow.com/questions/53347759/importerror-libcblas-so-3-cannot-open-shared-object-file-no-such-file-or-dire)
